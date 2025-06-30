@@ -7,5 +7,5 @@ const router =express.Router();
 router.get('/users',protectRoute, getUsersForSidebar);
 router.get("/:id",protectRoute,getMessages);
 
-router.post('/send:id',protectRoute,sendMessage); // Assuming you have a sendMessage controller
+router.post('/send/:id',protectRoute,sendMessage); // Fixed route: added missing slash before :id
 export default router;

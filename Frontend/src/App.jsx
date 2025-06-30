@@ -11,13 +11,20 @@ import SettingsPage from './pages/SettingsPage';
 import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
+import { useThemeStore } from './store/useThemeStore';
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore(); // ✅ fixed
-
+  const { authUser, checkAuth, isCheckingAuth,onlineUsers } = useAuthStore(); // ✅ fixed
+  const {theme}=useThemeStore()
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (authUser) {
+      useAuthStore.getState().initializeSocket(authUser._id);
+    }
+  }, [authUser]);
 
   console.log(authUser);
 
@@ -28,7 +35,7 @@ const App = () => {
   );
 
   return (
-    <div>
+    <div data-theme={theme} className="min-h-screen bg-base-100 text-base-content">
       <Navbar />
 
       <Routes>

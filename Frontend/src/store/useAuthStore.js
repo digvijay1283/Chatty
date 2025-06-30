@@ -1,120 +1,111 @@
-import { create } from 'zustand';
-import { axiosInstance } from '../lib/axios';
-import toast from 'react-hot-toast';
+import { create } from "zustand";
+import { axiosInstance } from "../lib/axios.js";
+import toast from "react-hot-toast";
+import { io } from "socket.io-client";
 
-export const useAuthStore = create((set) => ({  // ✅ include `set` here
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+
+export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
+  onlineUsers: [],
+  socket: null,
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get('/auth/check');
-      set({ authUser: res.data }); // ✅ works now
+      const res = await axiosInstance.get("/auth/check");
+
+      set({ authUser: res.data });
+      get().connectSocket();
     } catch (error) {
-      console.log("Error in check auth:", error);
-      set({ authUser: null }); // ✅ works now
+      console.log("Error in checkAuth:", error);
+      set({ authUser: null });
     } finally {
-      set({ isCheckingAuth: false }); // ✅ works now
+      set({ isCheckingAuth: false });
     }
   },
 
-  signup : async (data) => {
+  signup: async (data) => {
     set({ isSigningUp: true });
     try {
-      const res = await axiosInstance.post('/auth/signup', data);
+      const res = await axiosInstance.post("/auth/signup", data);
       set({ authUser: res.data });
-      toast.success("Account created successfully!");
+      toast.success("Account created successfully");
+      get().connectSocket();
     } catch (error) {
-      console.log("Error in signup:", error);
-      toast.error(
-        error.response?.data?.message || "Something went wrong!"
-      );
+      toast.error(error.response.data.message);
     } finally {
       set({ isSigningUp: false });
     }
   },
 
-  login : async (data) => {
+  login: async (data) => {
     set({ isLoggingIn: true });
     try {
-      const res = await axiosInstance.post('/auth/login', data);
-      if (res.data) {
-        set({ authUser: res.data });
-        toast.success("Logged in successfully!");
-      } else {
-        throw new Error("No data received from server");
-      }
+      const res = await axiosInstance.post("/auth/login", data);
+      set({ authUser: res.data });
+      toast.success("Logged in successfully");
+
+      get().connectSocket();
     } catch (error) {
-      console.error("Error in login:", error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Server error response:", error.response.data);
-        toast.error(error.response.data.message || "Invalid email or password");
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request);
-        toast.error("Server not responding. Please try again later.");
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error setting up request:", error.message);
-        toast.error("Unable to connect to server. Please check your connection.");
-      }
+      toast.error(error.response.data.message);
     } finally {
       set({ isLoggingIn: false });
     }
   },
+  initializeSocket: (userId) => {
+    if (get().socket) return; // Prevent multiple connections
+    const socket = io("http://localhost:5001", { withCredentials: true });
+    socket.emit("join", userId);
+    set({ socket });
+  },
 
-  logout : async () => {
+  logout: async () => {
     try {
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post("/auth/logout");
       set({ authUser: null });
-      toast.success("Logged out successfully!");
+      toast.success("Logged out successfully");
+      get().disconnectSocket();
     } catch (error) {
-      console.log("Error in logout:", error);
-      toast.error(
-        error.response?.data?.message || "Something went wrong!"
-      );
+      toast.error(error.response.data.message);
     }
-  }, 
+  },
 
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      // Add a longer timeout specifically for profile updates
-      const res = await axiosInstance.put("/auth/update-profile", data, {
-        timeout: 60000, // 60 seconds timeout for image upload
-      });
-      
-      if (!res?.data) {
-        throw new Error("No response data received");
-      }
-
+      const res = await axiosInstance.put("/auth/update-profile", data);
       set({ authUser: res.data });
-      return res.data; // Return data for toast.promise
+      toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error in update profile:", error);
-      let errorMessage;
-      
-      if (error.code === 'ECONNABORTED') {
-        errorMessage = "Upload timed out. Please try again with a smaller image.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else {
-        errorMessage = "Failed to update profile. Please try again.";
-      }
-      
-      throw new Error(errorMessage); // Throw formatted error for toast.promise
+      console.log("error in update profile:", error);
+      toast.error(error.response.data.message);
     } finally {
       set({ isUpdatingProfile: false });
     }
   },
 
+  connectSocket: () => {
+    const { authUser } = get();
+    if (!authUser || get().socket?.connected) return;
+
+    const socket = io(BASE_URL, {
+      query: {
+        userId: authUser._id,
+      },
+    });
+    socket.connect();
+
+    set({ socket: socket });
+
+    socket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+  },
+  disconnectSocket: () => {
+    if (get().socket?.connected) get().socket.disconnect();
+  },
 }));
-
-
