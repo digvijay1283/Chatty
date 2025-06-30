@@ -94,57 +94,17 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile pic is required" });
     }
 
-    if (!profilePic.startsWith('data:image')) {
-      return res.status(400).json({ message: "Invalid image format" });
-    }
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
 
-    // Verify Cloudinary configuration
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      console.error("Cloudinary configuration is missing");
-      return res.status(500).json({ message: "Image upload service is not configured properly" });
-    }
-
-    // Find user first to make sure they exist
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Validate Cloudinary configuration
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      console.error("Cloudinary configuration missing");
-      return res.status(500).json({ message: "Image upload service not configured" });
-    }
-
-    try {
-      const uploadResponse = await cloudinary.uploader.upload(profilePic, {
-        folder: "chat_app_profile_pics",
-        width: 500,
-        height: 500,
-        crop: "fill"
-      });
-
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { 
-          profilePic: uploadResponse.secure_url,
-          updatedAt: new Date()
-        },
-        { new: true }
-      ).select("-password");
-
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.status(200).json(updatedUser);
-    } catch (uploadError) {
-      console.error("Cloudinary upload error:", uploadError);
-      return res.status(500).json({ message: "Failed to upload image" });
-    }
+    res.status(200).json(updatedUser);
   } catch (error) {
-    console.error("Error in update profile:", error);
-    res.status(500).json({ message: error.message || "Internal server error" });
+    console.log("error in update profile:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

@@ -1,15 +1,14 @@
-import React from "react";
-import { MessageSquare, User, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useAuthStore } from "../store/useAuthStore"; // Adjust the import path as necessary
 import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
+import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare, User } from "lucide-react";
+import { Link } from "react-router-dom";
+
 import AuthImagePattern from "../components/AuthImagePattern";
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import toast from "react-hot-toast";
 
 const SignUpPage = () => {
-  const navigate = useNavigate();
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [formData, setFormData] = React.useState({
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
@@ -18,35 +17,29 @@ const SignUpPage = () => {
   const { signup, isSigningUp } = useAuthStore();
 
   const validateForm = () => {
-    if (!formData.fullName.trim()) return toast.error("full name is required ");
-    if (!formData.email.trim()) return toast.error("email is required ");
-    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("invalid email format");
-    if (!formData.password.trim()) return toast.error("password is required ");
-    if (formData.password.length < 6) return toast.error("password must be at least 6 characters long");
+    if (!formData.fullName.trim()) return toast.error("Full name is required");
+    if (!formData.email.trim()) return toast.error("Email is required");
+    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
+    if (!formData.password) return toast.error("Password is required");
+    if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
 
-    return true; // Return true if all validations pass
+    return true;
   };
-  const handleSubmit = async (e) => {
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    const success = validateForm()
+    const success = validateForm();
 
-    if (success === true) {
-      try {
-        await signup(formData);
-        navigate('/'); // Redirect to home page after successful signup
-      } catch (error) {
-        console.error('Signup failed:', error);
-      }
-    }
+    if (success === true) signup(formData);
   };
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left side: Form */}
+      {/* left side */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
-          {/* logo */}
+          {/* LOGO */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center gap-2 group">
               <div
@@ -56,14 +49,11 @@ const SignUpPage = () => {
                 <MessageSquare className="size-6 text-primary" />
               </div>
               <h1 className="text-2xl font-bold mt-2">Create Account</h1>
-              <p className="text-base-content/60">
-                Get started with your free account
-              </p>
+              <p className="text-base-content/60">Get started with your free account</p>
             </div>
           </div>
-          {/* form */}
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Full Name Field */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Full Name</span>
@@ -77,14 +67,11 @@ const SignUpPage = () => {
                   className={`input input-bordered w-full pl-10`}
                   placeholder="John Doe"
                   value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 />
               </div>
             </div>
 
-            {/* Email Field */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Email</span>
@@ -103,7 +90,6 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Password</span>
@@ -132,7 +118,7 @@ const SignUpPage = () => {
                 </button>
               </div>
             </div>
-            {/* Submit Button */}
+
             <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
               {isSigningUp ? (
                 <>
@@ -145,19 +131,19 @@ const SignUpPage = () => {
             </button>
           </form>
 
-          {/* Login Link */}
           <div className="text-center">
             <p className="text-base-content/60">
               Already have an account?{" "}
-              <a href="/login" className="link link-primary">
+              <Link to="/login" className="link link-primary">
                 Sign in
-              </a>
+              </Link>
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right side: Image/Illustration */}
+      {/* right side */}
+
       <AuthImagePattern
         title="Join our community"
         subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
@@ -165,5 +151,4 @@ const SignUpPage = () => {
     </div>
   );
 };
-
 export default SignUpPage;

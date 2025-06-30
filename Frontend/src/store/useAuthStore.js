@@ -56,12 +56,6 @@ export const useAuthStore = create((set, get) => ({
       set({ isLoggingIn: false });
     }
   },
-  initializeSocket: (userId) => {
-    if (get().socket) return; // Prevent multiple connections
-    const socket = io("http://localhost:5001", { withCredentials: true });
-    socket.emit("join", userId);
-    set({ socket });
-  },
 
   logout: async () => {
     try {

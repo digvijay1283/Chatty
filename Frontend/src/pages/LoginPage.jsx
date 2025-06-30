@@ -3,7 +3,6 @@ import { useAuthStore } from "../store/useAuthStore";
 import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
-import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,40 +12,9 @@ const LoginPage = () => {
   });
   const { login, isLoggingIn } = useAuthStore();
 
-  const validateForm = () => {
-    if (!formData.email.trim()) {
-      toast.error("Email is required");
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error("Invalid email format");
-      return false;
-    }
-    if (!formData.password.trim()) {
-      toast.error("Password is required");
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        toast.promise(login(formData), {
-          loading: 'Signing in...',
-          success: 'Welcome back!',
-          error: (err) => {
-            if (!err.response) {
-              return 'Cannot connect to server. Is it running on port 5001?';
-            }
-            return err.response?.data?.message || 'Failed to sign in';
-          },
-        });
-      } catch (error) {
-        console.error('Login error:', error);
-      }
-    }
+    login(formData);
   };
 
   return (

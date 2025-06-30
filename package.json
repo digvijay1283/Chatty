@@ -1,0 +1,21 @@
+{
+  "name": "chat_application_2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build":"",
+    "start":""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digvijay1283/Chatty.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/digvijay1283/Chatty/issues"
+  },
+  "homepage": "https://github.com/digvijay1283/Chatty#readme",
+  "description": ""
+}

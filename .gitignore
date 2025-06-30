@@ -7,7 +7,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Ignore node_modules and .env everywhere
+node_modules/
+**/node_modules/
+.env
+**/.env
+
 dist
 dist-ssr
 *.local
@@ -22,5 +27,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-.env
